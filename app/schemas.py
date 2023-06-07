@@ -12,7 +12,7 @@ class UserBase(BaseModel):
 class ProductBase(BaseModel):
     name: str
     category: str
-    original_price: int
+    original_price: float
     discount: float
 
     @validator('category')
@@ -29,9 +29,16 @@ class ProductBase(BaseModel):
 
 
 class UserRegister(UserBase):
+    role: str
     password: str
     phone_number: int
     city: str
+
+    @validator('role')
+    def role_match(cls, value):
+        if value not in ['user', 'admin']:
+            raise ValueError("enter a correct role name. choose from ['user', 'admin']")
+        return value
 
 
 class UserResponse(UserBase):
@@ -48,5 +55,29 @@ class ProductCreate(ProductBase):
 
 class ProductResponse(ProductBase):
     id: int
+    product_owner_id: int
+    new_price: float
     created_at: datetime
+    owner: UserResponse
+
+    class Config:
+        orm_mode = True
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    id: int
+    name: str
+    role: str
+
+    
 

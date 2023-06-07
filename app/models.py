@@ -1,7 +1,6 @@
 # in this file we are gonna store our postgres tables as python classes:
 from sqlalchemy import Column, Integer, String, text, TIMESTAMP, ForeignKey, Boolean, Float
 from sqlalchemy.orm import relationship, column_property
-
 from app.database import Base
 
 
@@ -10,6 +9,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     phone_number = Column(Integer, unique=True, nullable=False)
