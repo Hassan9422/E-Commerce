@@ -41,9 +41,17 @@ class UserRegister(UserBase):
         return value
 
 
-class UserResponse(UserBase):
+class UserResponse0(UserBase):
     id: int
     created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class UserResponse(BaseModel):
+    User: UserResponse0
+    product_number: int
 
     class Config:
         orm_mode = True
@@ -79,5 +87,10 @@ class TokenData(BaseModel):
     name: str
     role: str
 
-    
+    class Config:
+        orm_mode = True
 
+
+class Vote(BaseModel):
+    product_id: int
+    dir: bool

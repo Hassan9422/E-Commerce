@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, status, HTTPException, Response
+from sqlalchemy import func
 from sqlalchemy.orm import session
 from app import schemas, database, models, OAuth2
 
@@ -20,6 +21,7 @@ def create_product(product: schemas.ProductCreate, db: session = Depends(databas
 
 
 @router.get("/", response_model=List[schemas.ProductResponse])
+@router.get("/")
 def get_all_products(db: session = Depends(database.get_db), search: Optional[str] = "", current_user=Depends(
     OAuth2.verify_and_get_current_user), limit: int = 10, skip: int = 0):
     all_products = db.query(models.Product).filter(models.Product.name.contains(search)).limit(limit).offset(skip).all()
@@ -27,6 +29,7 @@ def get_all_products(db: session = Depends(database.get_db), search: Optional[st
     if not all_products:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Sorry! there are no products in the store recently!")
 
+    print(type(all_products))
     return all_products
 
 
@@ -34,6 +37,7 @@ def get_all_products(db: session = Depends(database.get_db), search: Optional[st
 def get_one_product(id: int, db: session = Depends(database.get_db), current_user=Depends(OAuth2.verify_and_get_current_user)):
     one_product = db.query(models.Product).filter(models.Product.id == id).first()
 
+    # .join(models.User, models.Product.product_owner_id == models.User.id)
     if not one_product:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f'product with id={id} does not exist!')
 
@@ -70,5 +74,5 @@ def delete_one_product(id: int, db: session = Depends(database.get_db), current_
     found_product_query.delete(synchronize_session=False)
     db.commit()
 
-    return Response(status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
