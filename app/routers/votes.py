@@ -16,24 +16,26 @@ def vote_one_product(vote: schemas.Vote, db: session = Depends(database.get_db),
     if not found_product:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"product with id={vote.product_id} does not exist!")
 
-    found_vote_query = db.query(models.Vote).filter(models.Vote.product_id == vote.product_id)
+    found_vote_query = db.query(models.Vote).filter(models.Vote.product_id == vote.product_id, models.Vote.user_id == current_user.id)
 
     if vote.dir == 0:
-        if not found_vote_query.first():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"product with id={vote.product_id} hasn't been liked already!")
         if found_product.product_owner_id == current_user.id:
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail=" you can't vote on your own product!")
+
+        if not found_vote_query.first():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"product with id={vote.product_id} hasn't been liked already!")
+
         found_vote_query.delete(synchronize_session=False)
         db.commit()
 
         return {"detail": "you deleted your vote successfully!"}
 
     else:
-        if found_vote_query.first():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"product with id={vote.product_id} has been liked already!")
-
         if found_product.product_owner_id == current_user.id:
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail=" you can't vote on your own product!")
+
+        if found_vote_query.first():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"product with id={vote.product_id} has been liked already!")
 
         new_vote = models.Vote(product_id=vote.product_id, user_id=current_user.id)
 

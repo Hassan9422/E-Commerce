@@ -61,12 +61,20 @@ class ProductCreate(ProductBase):
     pass
 
 
-class ProductResponse(ProductBase):
+class ProductResponse0(ProductBase):
     id: int
     product_owner_id: int
     new_price: float
     created_at: datetime
-    owner: UserResponse
+    owner: UserResponse0
+
+    class Config:
+        orm_mode = True
+
+
+class ProductResponse(BaseModel):
+    Product: ProductResponse0
+    vote_number: int
 
     class Config:
         orm_mode = True

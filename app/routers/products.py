@@ -21,10 +21,14 @@ def create_product(product: schemas.ProductCreate, db: session = Depends(databas
 
 
 @router.get("/", response_model=List[schemas.ProductResponse])
-@router.get("/")
 def get_all_products(db: session = Depends(database.get_db), search: Optional[str] = "", current_user=Depends(
     OAuth2.verify_and_get_current_user), limit: int = 10, skip: int = 0):
-    all_products = db.query(models.Product).filter(models.Product.name.contains(search)).limit(limit).offset(skip).all()
+    all_products = db.query(models.Product, func.count(models.Vote.user_id).label("vote_number")).join(models.Vote, models.Product.id ==
+                                                                                        models.Vote.product_id, isouter=True).group_by(
+        models.Product.id).filter(
+        models.Product.name.contains(
+        search)).limit(limit).offset(
+        skip).all()
 
     if not all_products:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Sorry! there are no products in the store recently!")
@@ -35,13 +39,15 @@ def get_all_products(db: session = Depends(database.get_db), search: Optional[st
 
 @router.get("/{id}", response_model=schemas.ProductResponse)
 def get_one_product(id: int, db: session = Depends(database.get_db), current_user=Depends(OAuth2.verify_and_get_current_user)):
-    one_product = db.query(models.Product).filter(models.Product.id == id).first()
-
+    one_product_query = db.query(models.Product, func.count(models.Vote.user_id).label("vote_number")).join(models.Vote, models.Product.id ==
+                                                                                        models.Vote.product_id, isouter=True).group_by(
+        models.Product.id).filter(
+        models.Product.id == id)
     # .join(models.User, models.Product.product_owner_id == models.User.id)
-    if not one_product:
+    if not one_product_query.first():
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f'product with id={id} does not exist!')
 
-    return one_product
+    return one_product_query.first()
 
 
 @router.put("/{id}", response_model=schemas.ProductResponse)
